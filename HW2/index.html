@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HW2</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+</head>
+<body>
+    <script type="text/javascript">
+
+        // function load_data(url) {
+        //     return d3.csv(url, function(data) {
+        //         for (var i = 0; i < data.length; i++) {
+        //             console.log(data[i].Type);
+        //         }
+        //     });
+        // }
+        //
+        //
+        // load_data("task_2_output.csv");
+
+        d3.csv("task_2_output.csv").row(function(d) { return {key: d.key, value: +d.value}; })
+            .get(function(error, rows) { console.log(rows); });
+
+        d3.select("body").append("h1").text("hello");
+        console.log("test");
+
+    </script>
+</body>
+</html>
