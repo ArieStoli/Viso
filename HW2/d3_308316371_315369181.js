@@ -20,6 +20,7 @@ d3.csv(task2CSV).then((data) =>{
     // console.log(barChartDataset)
     buildBarChart(barChartDataset);
     buildScatterPlot();
+    buildLineChart();
 });
 
 function buildBarChart(dataset_clean) {
@@ -28,7 +29,7 @@ function buildBarChart(dataset_clean) {
         .attr("class", "tooltip")
         .style("opacity", 0);
 
-    dataset = dataset_clean.map(i => {
+    let dataset = dataset_clean.map(i => {
         i.Type = i.Type;
         return i;
     });
@@ -285,15 +286,18 @@ async function buildScatterPlot() {
 }
 
 async function buildLineChart() {
-    var div = d3.select("body").append("div")
+    let div = d3.select("body").append("div")
         .attr("class", "tooltip2")
         .style("opacity", 0);
 
-    let w = 700;
-    let h = 400;
-    let padding = 50;
+    let margin = {top: 10, right: 30, bottom: 30, left: 60},
+        width = 700 - margin.left - margin.right,
+        height = 400 - margin.top - margin.bottom,
+        svgWidth = 700,
+        svgHeight = 400;
 
-    let dataset = d3.csvParse(await getData(carsCSV), function (d) {
+    let dates = []
+    let dataset = d3.csvParse(await getData(fuelPrices), function (d) {
         // if (d.hwyMPG != '*') {
         //
         //     return {
@@ -304,33 +308,92 @@ async function buildLineChart() {
         //     };
         // } TODO - wut wut?!
 
+        dates.push(new Date(d3.timeParse("%m/%d/%Y")(d["Date"])));
         return {
-            cylinder: d["Cyl"],
-            hwyMPG: d["Hwy MPG"],
-            hp: d["HP"],
-            type: getType(d["Sports Car"], d["SUV"], d["Wagon"], d["Minivan"], d["Pickup"])
+            type: {
+                gas: {
+                    date: new Date(d3.timeParse("%m/%d/%Y")(d["Date"])),
+                    price: parseFloat(d["Petrol (USD)"])
+                },
+                diesel: {
+                    date: new Date(d3.timeParse("%m/%d/%Y")(d["Date"])),
+                    price: parseFloat(d["Diesel (USD)"])
+                }
+            }
         };
     });
 
-    let xScale = d3.scaleLinear()
-        .domain([0, d3.max(dataset, d => parseInt(d.hp))])
-        .range([padding, w - padding * 2]);
+    // let xScale = d3.scaleLinear()
+    //     .domain([0, d3.max(dataset, d => parseInt(d.hp))])
+    //     .range([padding, w - padding * 2]);
+    //
+    // let yScale = d3.scaleLinear()
+    //     .domain([0, d3.max(dataset, d => parseInt(d.hwyMPG)) + 5])
+    //     .range([h - padding, padding]);
 
-    let yScale = d3.scaleLinear()
-        .domain([0, d3.max(dataset, d => parseInt(d.hwyMPG)) + 5])
-        .range([h - padding, padding]);
-
-    let rScale = d3.scaleLinear()
-        .domain([0, d3.max(dataset, d => parseInt(d.cylinder))])
-        .range([1.5, 5]);
-
-    let container = d3.select('#scatterplot')
-        .attr("width", w)
-        .attr("height", h);
+    let container = d3.select('#linechart')
+        .attr("width", svgWidth)
+        .attr("height", svgHeight);
 
     let svg = container.append("svg")
-        .attr("width", w)
-        .attr("height", h);
+        .attr("width", svgWidth)
+        .attr("height", svgHeight);
+
+    let xScale = d3.scaleTime()
+        .range([0, width]);
+
+    let yScale = d3.scaleLinear()
+        .range([height, 0]);
+
+    let color = d3.scaleOrdinal(d3.schemeCategory10);
+
+    let axisTicks = {qty: 6, outerSize:0};
+    let xAxis = d3.axisBottom(xScale).tickSizeOuter(axisTicks.outerSize);
+    let yAxis = d3.axisLeft(yScale).ticks(axisTicks.qty).tickSizeOuter(axisTicks.outerSize);
+
+    color.domain(["Petrol", 'Diesel']);
+
+    xScale.domain(d3.extent(dates, function(d) {
+        console.log(d)
+        return d;
+    }));
+
+    let gasMin = d3.min(dataset, function (d) {
+        return d.type.gas.price;
+    });
+
+    let dieselMin = d3.min(dataset, function (d) {
+        return d.type.diesel.price;
+    });
+
+    let gasMax = d3.max(dataset, function (d) {
+        return d.type.gas.price;
+    });
+
+    let dieselMax = d3.max(dataset, function (d) {
+        return d.type.diesel.price;
+    });
+
+    yScale.domain([
+        dieselMin < gasMin ? gasMin : dieselMin,
+        dieselMax < gasMax ? gasMax : dieselMax
+    ]);
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", padding)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Temperature (ºF)");
+
 }
 
 
