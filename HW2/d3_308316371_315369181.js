@@ -85,7 +85,7 @@ function buildBarChart(dataset_clean) {
                 .style("opacity", .9);
             div.html("Retail Price<br/>" + d.RetailPrice.toFixed(3))
                 .style("left", (event.pageX) + "px")
-                .style("top", (event.pageY - 28) + "px");
+                .style("top", (event.pageY - 15) + "px");
             d3.select(this).style('stroke',"black").style("fill","darkblue");
         })
         .on("mouseout", function(d) {
@@ -94,7 +94,6 @@ function buildBarChart(dataset_clean) {
                 .style("opacity", 0);
             d3.select(this).style('stroke',"none").style("fill","blue");
         });
-
 
     /* Add DealerCost bars */
     Type.selectAll(".bar.DealerCost")
@@ -115,7 +114,7 @@ function buildBarChart(dataset_clean) {
                 .style("opacity", .9);
             div.html("Dealer Cost<br/>" + d.DealerCost.toFixed(3))
                 .style("left", (event.pageX) + "px")
-                .style("top", (event.pageY - 28) + "px");
+                .style("top", (event.pageY - 15) + "px");
             d3.select(this).style('stroke',"black").style("fill","darkred");
         })
         .on("mouseout", function(d) {
@@ -286,18 +285,19 @@ async function buildScatterPlot() {
 }
 
 async function buildLineChart() {
-    let div = d3.select("body").append("div")
+     let div = d3.select("body").append("div")
         .attr("class", "tooltip2")
         .style("opacity", 0);
+    var parseTime = d3.timeParse("%mm/%dd/%yyyy");
 
-    let margin = {top: 10, right: 30, bottom: 30, left: 60},
+    let margin = {top: 15, right: 30, bottom: 30, left: 60},
         width = 700 - margin.left - margin.right,
         height = 400 - margin.top - margin.bottom,
         svgWidth = 700,
         svgHeight = 400;
 
     let dates = []
-    let dataset = d3.csvParse(await getData(fuelPrices), function (d) {
+    let dataset = d3.csv(await getData(fuelPrices), function (d) {
         // if (d.hwyMPG != '*') {
         //
         //     return {
@@ -309,19 +309,20 @@ async function buildLineChart() {
         // } TODO - wut wut?!
 
         dates.push(new Date(d3.timeParse("%m/%d/%Y")(d["Date"])));
+
         return {
-            type: {
-                gas: {
-                    date: new Date(d3.timeParse("%m/%d/%Y")(d["Date"])),
-                    price: parseFloat(d["Petrol (USD)"])
-                },
-                diesel: {
-                    date: new Date(d3.timeParse("%m/%d/%Y")(d["Date"])),
-                    price: parseFloat(d["Diesel (USD)"])
-                }
-            }
+            date: new Date(d3.timeParse("%m/%d/%Y")(d["Date"])),
+            // date: d["Date"]new Date().toLocaleDateString(),
+            priceGas: parseFloat(d["Petrol (USD)"]),
+            priceDiesel: parseFloat(d["Diesel (USD)"])
         };
     });
+
+    data = await d3.csv("Fuel_Prices.csv");
+    data = data.map((car) =>{
+        const dateParser = d3.timeParse('%m/%d/%y');
+        console.log(dateParser(car.Date));
+    })
 
     // let xScale = d3.scaleLinear()
     //     .domain([0, d3.max(dataset, d => parseInt(d.hp))])
@@ -345,6 +346,7 @@ async function buildLineChart() {
     let yScale = d3.scaleLinear()
         .range([height, 0]);
 
+
     let color = d3.scaleOrdinal(d3.schemeCategory10);
 
     let axisTicks = {qty: 6, outerSize:0};
@@ -354,45 +356,90 @@ async function buildLineChart() {
     color.domain(["Petrol", 'Diesel']);
 
     xScale.domain(d3.extent(dates, function(d) {
-        console.log(d)
         return d;
     }));
 
     let gasMin = d3.min(dataset, function (d) {
-        return d.type.gas.price;
+        return d.priceGas;
     });
 
     let dieselMin = d3.min(dataset, function (d) {
-        return d.type.diesel.price;
+        return d.priceDiesel;
     });
 
     let gasMax = d3.max(dataset, function (d) {
-        return d.type.gas.price;
+        return d.priceGas;
     });
 
     let dieselMax = d3.max(dataset, function (d) {
-        return d.type.diesel.price;
+        return d.priceDiesel;
     });
 
     yScale.domain([
-        dieselMin < gasMin ? gasMin : dieselMin,
-        dieselMax < gasMax ? gasMax : dieselMax
+        dieselMin < gasMin ? gasMin - 5 : dieselMin - 5,
+        dieselMax < gasMax ? gasMax + 5 : dieselMax + 5
     ]);
+
+    // define the 1st line
+    var valueline = d3.line()
+        .x(function(d) { return xScale(d.date); })
+        .y(function(d) { return yScale(d.priceGas); });
+
+// define the 2nd line
+    var valueline2 = d3.line()
+        .x(function(d) { return xScale(d.date); })
+        .y(function(d) { return yScale(d.priceDiesel); });
+
+
+
 
     svg.append("g")
         .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
+        .attr("transform", `translate(${margin.left},${height })`)
         .call(xAxis);
 
+    // X axis label
+    svg.append("text")
+        .attr("text-anchor", "middle")
+        .attr("transform", "translate(" + (width / 2.2) + "," + (height + 35) + ")")
+        .text("Years");
+
+    // Add the Y Axis
     svg.append("g")
         .attr("class", "y axis")
-        .call(yAxis)
-        .append("text")
+        .attr("transform", "translate(" + margin.left + ",0)")
+
+        .call(yAxis);
+
+    // Y axis label
+    svg.append("text")
+        .attr("text-anchor", "middle")
+        .attr("x", - height/2)
+        .attr("y", 16)
         .attr("transform", "rotate(-90)")
-        .attr("y", padding)
-        .attr("dy", ".71em")
-        .style("text-anchor", "end")
-        .text("Temperature (ºF)");
+        .text("US Dollars");
+
+    // title
+    svg.append("text")
+        .attr("x", width/2)
+        .attr("y", margin.top)
+        .attr("text-anchor", "right")
+        .style("font-size", "16px")
+        .text("Fuel prices");
+
+
+
+    svg.append("path")
+        .data(dataset)
+        .attr("class", "line")
+        .attr("d", valueline);
+
+    // Add the valueline2 path.
+    svg.append("path")
+        .data(dataset)
+        .attr("class", "line")
+        .style("stroke", "red")
+        .attr("d", valueline2);
 
 }
 
@@ -427,4 +474,12 @@ function getColor(type) {
         default:
             return 'grey'
     }
+}
+function formatDate(value) {
+    let date = new Date(value);
+    const day = date.toLocaleString('default', { day: '2-digit' });
+    const month = date.toLocaleString('default', { month: 'short' });
+    const year = date.toLocaleString('default', { year: 'numeric' });
+    let dateNew = day + '/' + month + '/' + year;
+    return new Date(d3.timeParse("%m/%d/%Y")(dateNew))
 }
