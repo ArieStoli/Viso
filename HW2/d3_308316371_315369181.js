@@ -1,70 +1,65 @@
 const task2CSV = 'task_2_output.csv';
 const carsCSV = 'cars.csv';
 const fuelPrices = 'Fuel_Prices.csv';
-let barChartDataset = [];
-j = 0;
-d3.csv(task2CSV).then((data) => {
-	// console.log(data);
-	data.forEach((d) => {
-		d['Dealer.Cost'] = +d['Dealer.Cost'];
-		d['Retail.Price'] = +d['Retail.Price'];
-		barChartDataset[j] = {
-			Type: d['Type'],
-			RetailPrice: d['Retail.Price'],
-			DealerCost: d['Dealer.Cost'],
-		};
-		j = j + 1;
-		return barChartDataset;
-	});
 
-	// let barChartDataset = Object.assign(d3.csvParse(await FileAttachment(File_Pick).text(), ({ Type: x, RetailPrice: y, DealerCost: z}) => ({Type: x, RetailPrice: y, DealerCost: z})), {x: "Type", y: "Retail.Price", z: "Dealer.Cost"});
+const svgSize = {
+    width : 700,
+    height : 400,
+    margin: {
+        left : 50,
+        right : 50,
+        top : 20,
+        bottom : 30
+    },
+    padding : 3,
+    barPadding : 0.2,
+}
 
-	// console.log(barChartDataset)
-	buildBarChart(barChartDataset);
-	buildScatterPlot();
-	buildLineChart();
-});
+const axisTicks = {
+    qty: 6,
+    outerSize: 0
+}
 
-function buildBarChart(dataset_clean) {
-	// console.log(dataset_clean)
-	var div = d3
+buildBarChart();
+buildScatterPlot();
+buildLineChart();
+
+async function buildBarChart() {
+
+    let dataset = d3.csvParse(await getData(task2CSV), function (d) {
+        let temp = {
+                Type: d['Type'],
+                RetailPrice: d['Retail.Price'],
+                DealerCost: d['Dealer.Cost'],
+        };
+        return temp;
+
+    });
+
+	let div = d3
 		.select('body')
 		.append('div')
 		.attr('class', 'tooltip')
 		.style('opacity', 0);
 
-	let dataset = dataset_clean.map((i) => {
+	let dataset_clean = dataset.map((i) => {
 		i.Type = i.Type;
 		return i;
 	});
 
-	let container = d3.select('#barchart'),
-		width = 500,
-		height = 300,
-		svgPadding = 3;
-	var margin = { top: 30, right: 20, bottom: 50, left: 50 },
-		barPadding = 0.2,
-		axisTicks = { qty: 6, outerSize: 0 };
+	let container = d3.select('#barchart')
 
 	let svg = container
 		.append('svg')
-		.attr('width', width)
-		.attr('height', height)
-		.append('g')
-		.attr('transform', `translate(${margin.left},${margin.top})`);
+		.attr('width', svgSize.width)
+		.attr('height', svgSize.height);
 
 	let xScale0 = d3
 		.scaleBand()
-		.range([margin.left, width - margin.left - margin.right])
-		.padding(barPadding);
+		.range([svgSize.margin.left, svgSize.width - svgSize.margin.left - svgSize.margin.right])
+		.padding(svgSize.barPadding);
 	let xScale1 = d3.scaleBand();
-	let yScale = d3.scaleLinear().range([height - margin.top - margin.bottom, 0]);
-
-	let xAxis = d3.axisBottom(xScale0).tickSizeOuter(axisTicks.outerSize);
-	let yAxis = d3
-		.axisLeft(yScale)
-		.ticks(axisTicks.qty)
-		.tickSizeOuter(axisTicks.outerSize);
+	let yScale = d3.scaleLinear().range([svgSize.height - svgSize.margin.top - svgSize.margin.bottom, 0]);
 
 	xScale0.domain(dataset_clean.map((d) => d.Type));
 	xScale1.domain(['RetailPrice', 'DealerCost']).range([0, xScale0.bandwidth()]);
@@ -75,7 +70,13 @@ function buildBarChart(dataset_clean) {
 		),
 	]);
 
-	var Type = svg
+    let xAxis = d3.axisBottom(xScale0).tickSizeOuter(axisTicks.outerSize);
+    let yAxis = d3
+        .axisLeft(yScale)
+        .ticks(axisTicks.qty)
+        .tickSizeOuter(axisTicks.outerSize);
+
+	let Type = svg
 		.selectAll('.Type')
 		.data(dataset_clean)
 		.enter()
@@ -94,12 +95,12 @@ function buildBarChart(dataset_clean) {
 		.attr('y', (d) => yScale(d.RetailPrice))
 		.attr('width', xScale1.bandwidth())
 		.attr('height', (d) => {
-			return height - margin.top - margin.bottom - yScale(d.RetailPrice);
+			return svgSize.height - svgSize.margin.bottom - svgSize.margin.top - yScale(d.RetailPrice);
 		})
 		.on('mouseover', function (event, d) {
 			div.transition().duration(200).style('opacity', 0.9);
 			div
-				.html('Retail Price<br/>' + d.RetailPrice.toFixed(3))
+				.html('Retail Price<br/>' + parseFloat(d.RetailPrice).toFixed(3))
 				.style('left', event.pageX + 'px')
 				.style('top', event.pageY - 15 + 'px');
 			d3.select(this).style('stroke', 'black').style('fill', 'darkblue');
@@ -120,12 +121,12 @@ function buildBarChart(dataset_clean) {
 		.attr('y', (d) => yScale(d.DealerCost))
 		.attr('width', xScale1.bandwidth())
 		.attr('height', (d) => {
-			return height - margin.top - margin.bottom - yScale(d.DealerCost);
+			return svgSize.height - svgSize.margin.bottom - svgSize.margin.top - yScale(d.DealerCost);
 		})
 		.on('mouseover', function (event, d) {
 			div.transition().duration(200).style('opacity', 0.9);
 			div
-				.html('Dealer Cost<br/>' + d.DealerCost.toFixed(3))
+				.html('Dealer Cost<br/>' + parseFloat(d.DealerCost).toFixed(3))
 				.style('left', event.pageX + 'px')
 				.style('top', event.pageY - 15 + 'px');
 			d3.select(this).style('stroke', 'black').style('fill', 'darkred');
@@ -137,42 +138,44 @@ function buildBarChart(dataset_clean) {
 
 	svg
 		.append('text')
-		.attr('x', width / 3)
-		.attr('y', svgPadding)
+		.attr('x', svgSize.width / 3)
+		.attr('y', svgSize.margin.top)
 		.attr('text-anchor', 'right')
 		.style('font-size', '16px')
-		.text('Sales and costs per each vehicle category');
+		.text('Sales and costs per each vehicle category')
+        .attr("class", "chartTitle");
 
 	// Add the X Axis
 	svg
 		.append('g')
 		.attr('class', 'x axis')
-		.attr('transform', `translate(0,${height - margin.top - margin.bottom})`)
+		.attr('transform', `translate(0,${svgSize.height - svgSize.margin.bottom - svgSize.margin.top})`)
 		.call(xAxis);
 
 	// X axis label
 	svg
 		.append('text')
 		.attr('text-anchor', 'middle')
-		.attr('transform', 'translate(' + width / 2.2 + ',' + (height - 35) + ')')
-		.text('Vehicle category');
+		.attr('transform', 'translate(' + svgSize.width / 2.2 + ',' + (svgSize.height - 10) + ')')
+		.text('Vehicle category')
+        .attr("class", "axisLabel");
 
 	// Add the Y Axis
 	svg
 		.append('g')
 		.attr('class', 'y axis')
-		.attr('transform', 'translate(' + margin.left + ',0)')
-
-		.call(yAxis);
+		.attr('transform', 'translate(' + (svgSize.margin.left + 5) + ',0)')
+        .call(yAxis);
 
 	// Y axis label
 	svg
 		.append('text')
 		.attr('text-anchor', 'middle')
-		.attr('x', -height / 3)
-		.attr('y', 0)
+		.attr('x', -svgSize.height / 3)
+		.attr('y', 10)
 		.attr('transform', 'rotate(-90)')
-		.text('USD - $');
+		.text('USD - $')
+        .attr("class", "axisLabel");
 }
 
 async function buildScatterPlot() {
@@ -182,20 +185,9 @@ async function buildScatterPlot() {
 		.attr('class', 'tooltip2')
 		.style('opacity', 0);
 
-	let w = 700;
-	let h = 400;
 	let padding = 50;
 
 	let dataset = d3.csvParse(await getData(carsCSV), function (d) {
-		// if (d.hwyMPG != '*') {
-		//
-		//     return {
-		//         cylinder: d["Cyl"],
-		//         hwyMPG: d["Hwy MPG"],
-		//         hp: d["HP"],
-		//         type: getType(d["Sports Car"], d["SUV"], d["Wagon"], d["Minivan"], d["Pickup"])
-		//     };
-		// } TODO - wut wut?!
 
 		return {
 			cylinder: d['Cyl'],
@@ -213,22 +205,22 @@ async function buildScatterPlot() {
 
 	let xScale = d3
 		.scaleLinear()
-		.domain([0, d3.max(dataset, (d) => parseInt(d.hp))])
-		.range([padding, w - padding * 2]);
+		.domain([0, d3.max(dataset, (d) => parseInt(d.hp))+25])
+		.range([padding, svgSize.width - padding * 2]);
 
 	let yScale = d3
 		.scaleLinear()
 		.domain([0, d3.max(dataset, (d) => parseInt(d.hwyMPG)) + 5])
-		.range([h - padding, padding]);
+		.range([svgSize.height - padding, padding]);
 
 	let rScale = d3
 		.scaleLinear()
 		.domain([0, d3.max(dataset, (d) => parseInt(d.cylinder))])
 		.range([1.5, 5]);
 
-	let container = d3.select('#scatterplot').attr('width', w).attr('height', h);
+	let container = d3.select('#scatterplot').attr('width', svgSize.width).attr('height', svgSize.height);
 
-	let svg = container.append('svg').attr('width', w).attr('height', h);
+	let svg = container.append('svg').attr('width', svgSize.width).attr('height', svgSize.height);
 
 	svg
 		.selectAll('circle')
@@ -238,11 +230,10 @@ async function buildScatterPlot() {
 		.attr('cx', function (d) {
 			return xScale(d.hp);
 		})
-		.attr('cy', function (d) {
-			if (d.hwyMPG != '*') return yScale(d.hwyMPG);
-			else return -200; //TODO - ihsa
-		})
-		.attr('r', function (d) {
+        .attr('cy', function (d) {
+            return yScale(d.hwyMPG);
+        })
+        .attr('r', function (d) {
 			return rScale(d.cylinder);
 		})
 		.attr('fill', function (d) {
@@ -264,7 +255,6 @@ async function buildScatterPlot() {
 			});
 		});
 
-	let axisTicks = { qty: 6, outerSize: 0 };
 	let xAxis = d3.axisBottom(xScale).tickSizeOuter(axisTicks.outerSize);
 	let yAxis = d3
 		.axisLeft(yScale)
@@ -274,15 +264,16 @@ async function buildScatterPlot() {
 	svg
 		.append('g')
 		.attr('class', 'x axis')
-		.attr('transform', `translate(0,${h - padding})`)
+		.attr('transform', `translate(0,${svgSize.height - padding})`)
 		.call(xAxis);
 
 	// X axis label
 	svg
 		.append('text')
 		.attr('text-anchor', 'middle')
-		.attr('transform', 'translate(' + w / 2.2 + ',' + (h - 16) + ')')
-		.text('Horse power');
+		.attr('transform', 'translate(' + svgSize.width / 2.2 + ',' + (svgSize.height - 16) + ')')
+		.text('Horse power')
+        .attr("class", "axisLabel");
 
 	// Add the Y Axis
 	svg
@@ -296,79 +287,86 @@ async function buildScatterPlot() {
 	svg
 		.append('text')
 		.attr('text-anchor', 'middle')
-		.attr('x', -h / 2)
+		.attr('x', -svgSize.height / 2)
 		.attr('y', 16)
 		.attr('transform', 'rotate(-90)')
-		.text('Highway Miles per Gallon');
+		.text('Highway Miles per Gallon')
+        .attr("class", "axisLabel");
 
 	// title
 	svg
 		.append('text')
-		.attr('x', w / 3)
+		.attr('x', svgSize.width / 3)
 		.attr('y', padding)
 		.attr('text-anchor', 'right')
 		.style('font-size', '16px')
-		.text('Horse power to miles per gallon fuel consumption ratio');
+		.text('Horse power to miles per gallon fuel consumption ratio')
+        .attr("class", "chartTitle");
 }
 
 async function buildLineChart() {
+
 	let div = d3
 		.select('body')
 		.append('div')
 		.attr('class', 'tooltip2')
 		.style('opacity', 0);
-	var parseTime = d3.timeParse('%mm/%dd/%yyyy');
-
-	let margin = { top: 15, right: 30, bottom: 30, left: 60 },
-		width = 700 - margin.left - margin.right,
-		height = 400 - margin.top - margin.bottom,
-		svgWidth = 700,
-		svgHeight = 400;
 
 	let dates = [];
 	let dataset = d3.csvParse(await getData(fuelPrices), function (d) {
-		// if (d.hwyMPG != '*') {
-		//
-		//     return {
-		//         cylinder: d["Cyl"],
-		//         hwyMPG: d["Hwy MPG"],
-		//         hp: d["HP"],
-		//         type: getType(d["Sports Car"], d["SUV"], d["Wagon"], d["Minivan"], d["Pickup"])
-		//     };
-		// } TODO - wut wut?!
-		dates.push(new Date(d3.timeParse('%m/%d/%Y')(d['Date'])));
 
+		dates.push(new Date(d3.timeParse('%m/%d/%Y')(d['Date'])));
 		return {
 			date: d3.timeParse('%m/%d/%Y')(d['Date']),
-			// date: d["Date"]new Date().toLocaleDateString(),
 			priceGas: parseFloat(d['Petrol (USD)']),
 			priceDiesel: parseFloat(d['Diesel (USD)']),
 		};
 	});
-	// let xScale = d3.scaleLinear()
-	//     .domain([0, d3.max(dataset, d => parseInt(d.hp))])
-	//     .range([padding, w - padding * 2]);
-	//
-	// let yScale = d3.scaleLinear()
-	//     .domain([0, d3.max(dataset, d => parseInt(d.hwyMPG)) + 5])
-	//     .range([h - padding, padding]);
+
+    let gasMin = d3.min(dataset, function (d) {
+        return d.priceGas;
+    });
+
+    let dieselMin = d3.min(dataset, function (d) {
+        return d.priceDiesel;
+    });
+
+    let gasMax = d3.max(dataset, function (d) {
+        return d.priceGas;
+    });
+
+    let dieselMax = d3.max(dataset, function (d) {
+        return d.priceDiesel;
+    });
+
 	let container = d3
 		.select('#linechart')
-		.attr('width', svgWidth)
-		.attr('height', svgHeight);
+		.attr('width', svgSize.width)
+		.attr('height', svgSize.height);
 
 	let svg = container
 		.append('svg')
-		.attr('width', svgWidth)
-		.attr('height', svgHeight);
+		.attr('width', svgSize.width + 50)
+		.attr('height', svgSize.height);
 
-	let xScale = d3.scaleTime().range([0, width]);
+	let xScale = d3.scaleTime().range([0, svgSize.width]);
 
-	let yScale = d3.scaleLinear().range([height, 0]);
+	let yScale = d3.scaleLinear().range([svgSize.height - svgSize.margin.bottom - svgSize.margin.top, 0]);
 
 	let color = d3.scaleOrdinal(d3.schemeCategory10);
 
-	let axisTicks = { qty: 6, outerSize: 0 };
+    xScale.domain(
+        d3.extent(dates, function (d) {
+            return d;
+        })
+    );
+
+    yScale.domain([
+        // dieselMin < gasMin ? gasMin - 5 : dieselMin - 5,
+        0,
+        dieselMax < gasMax ? gasMax + 15 : dieselMax + 15,
+    ]);
+
 	let xAxis = d3.axisBottom(xScale).tickSizeOuter(axisTicks.outerSize);
 	let yAxis = d3
 		.axisLeft(yScale)
@@ -377,34 +375,7 @@ async function buildLineChart() {
 
 	color.domain(['Petrol', 'Diesel']);
 
-	xScale.domain(
-		d3.extent(dates, function (d) {
-			return d;
-		})
-	);
 
-	let gasMin = d3.min(dataset, function (d) {
-		return d.priceGas;
-	});
-
-	let dieselMin = d3.min(dataset, function (d) {
-		return d.priceDiesel;
-	});
-
-	let gasMax = d3.max(dataset, function (d) {
-		return d.priceGas;
-	});
-
-	let dieselMax = d3.max(dataset, function (d) {
-		return d.priceDiesel;
-	});
-
-	yScale.domain([
-		dieselMin < gasMin ? gasMin - 5 : dieselMin - 5,
-		dieselMax < gasMax ? gasMax + 5 : dieselMax + 5,
-	]);
-
-	// define the 1st line
 	var valueline = d3
 		.line()
 		.x(function (d) {
@@ -414,7 +385,7 @@ async function buildLineChart() {
 			return yScale(d.priceGas);
 		});
 
-	// define the 2nd line
+
 	var valueline2 = d3
 		.line()
 		.x(function (d) {
@@ -424,50 +395,54 @@ async function buildLineChart() {
 			return yScale(d.priceDiesel);
 		});
 
+	//Add the X Axis
 	svg
 		.append('g')
 		.attr('class', 'x axis')
-		.attr('transform', `translate(${margin.left},${height})`)
+		.attr('transform', `translate(${svgSize.margin.left},${svgSize.height - svgSize.margin.bottom - svgSize.margin.top})`)
 		.call(xAxis);
 
 	// X axis label
 	svg
 		.append('text')
 		.attr('text-anchor', 'middle')
-		.attr('transform', 'translate(' + width / 1.7 + ',' + (height + 35) + ')')
-		.text('Years');
+		.attr('transform', 'translate(' + (svgSize.width - svgSize.margin.left) / 1.7 + ',' + (svgSize.height - svgSize.margin.bottom + svgSize.margin.top) + ')')
+		.text('Years')
+        .attr("class", "axisLabel");
 
 	// Add the Y Axis
 	svg
 		.append('g')
 		.attr('class', 'y axis')
-		.attr('transform', 'translate(' + margin.left + ',0)')
+		.attr('transform', 'translate(' + svgSize.margin.left + ',0)')
 		.call(yAxis);
 
 	// Y axis label
 	svg
 		.append('text')
 		.attr('text-anchor', 'middle')
-		.attr('x', -height / 2)
+		.attr('x', -(svgSize.height - svgSize.margin.bottom) / 2)
 		.attr('y', 16)
 		.attr('transform', 'rotate(-90)')
-		.text('US Dollars');
+		.text('USD - $')
+        .attr("class", "axisLabel");
 
 	// title
 	svg
 		.append('text')
-		.attr('x', width / 2)
-		.attr('y', margin.top)
+		.attr('x', (svgSize.width - svgSize.margin.left) * 0.8)
+		.attr('y', svgSize.margin.top)
 		.attr('text-anchor', 'right')
 		.style('font-size', '16px')
-		.text('Fuel prices');
+		.text("Fuel prices from '04-20")
+        .attr("class", "chartTitle");
 
 	svg
 		.append('path')
 		.datum(dataset)
 		.attr('class', 'line')
 		.attr('d', valueline)
-		.attr('transform', 'translate(' + margin.left + ',0)');
+		.attr('transform', 'translate(' + svgSize.margin.left + ',0)');
 
 	// Add the valueline2 path.
 	svg
@@ -476,7 +451,7 @@ async function buildLineChart() {
 		.attr('class', 'line')
 		.style('stroke', 'red')
 		.attr('d', valueline2)
-		.attr('transform', 'translate(' + margin.left + ',0)');
+		.attr('transform', 'translate(' + svgSize.margin.left + ',0)');
 }
 
 async function getData(url) {
@@ -505,11 +480,4 @@ function getColor(type) {
 			return 'grey';
 	}
 }
-function formatDate(value) {
-	let date = new Date(value);
-	const day = date.toLocaleString('default', { day: '2-digit' });
-	const month = date.toLocaleString('default', { month: 'short' });
-	const year = date.toLocaleString('default', { year: 'numeric' });
-	let dateNew = day + '/' + month + '/' + year;
-	return new Date(d3.timeParse('%m/%d/%Y')(dateNew));
-}
+
