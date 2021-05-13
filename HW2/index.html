@@ -2,10 +2,13 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
 		<title>HW2</title>
 	</head>
 
 	<style>
+
 		div.tooltip {
 			position: absolute;
 			text-align: center;
@@ -33,7 +36,9 @@
 		}
 
 		.legend {
-			font-size: 12px; /* NEW */
+			font-size: 12px;
+			border-color: black;
+			border-width: 1px;
 		}
 
 		.line {
@@ -52,13 +57,80 @@
 			font-family: Arial;
 		}
 
+		.legendText {
+			font-size: 14px;
+			font-family: Arial;
+		}
+
+
+		#bg {
+			background-image: linear-gradient(lightgreen, palegreen, white);
+			content: ' ';
+			display: block;
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			opacity: 0.45;
+			z-index: -200;
+		}
+
+		.container {
+			width: 100%;
+			height: 450px;
+			alignment: center;
+			margin-left: 10%;
+			/*background-color: rgba(255, 255, 255, 0.15);*/
+		}
+
+		.button {
+			font-size: 25px;
+			padding: 10px 20px;
+			background: rgba(255, 255, 255, 0.6);
+			border: unset;
+			border-radius: 50%;
+			cursor: pointer;
+			box-shadow: 0 0 2px #000;
+			outline: 0;
+			position: relative;
+			margin-bottom: 50px;
+			margin-left: 10%;
+		}
+
+		#toBar {
+			margin-left: 27.5%;
+		}
+
+		.button:hover {
+			background: lightcyan;
+		}
+
+		.button:active {
+			background: rgb(139, 208, 133);
+		}
+
+		.main-heading {
+			font-family: "Calisto MT";
+			text-align: center;
+			color: darkgreen;
+		}
+
 	</style>
 	<body>
-		<div id="barchart"></div>
-		<div id="scatterplot"></div>
-		<div id="linechart"></div>
-		<script src="https://d3js.org/d3.v6.min.js"></script>
-		<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.20/lodash.min.js"></script>
-		<script src="d3_308316371_315369181.js"></script>
+	<div id="bg"></div>
+	<h1 class="main-heading"><u>HW2 308316371 315369181</u></h1>
+	<button id="toBar" class="button"><img src="https://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/256/Actions-office-chart-bar-icon.png" width="50" height="50" onclick="buttonClick('toBar')"></button>
+	<button id="toScatter" class="button"><img src="https://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/256/Actions-office-chart-scatter-icon.png" width="50" height="50" onclick="buttonClick('toScatter')"></button>
+	<button id="toLine" class="button"><img src="https://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/256/Actions-office-chart-line-icon.png" width="50" height="50" onclick="buttonClick('toLine')"></button>
+	<div class="container"></div>
+
+
+	<!--		<div id="scatterplot"></div>-->
+	<!--		<div id="linechart"></div>-->
+	<script src="https://d3js.org/d3.v6.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.20/lodash.min.js"></script>
+	<script src="d3_308316371_315369181.js"></script>
+
 	</body>
 </html>

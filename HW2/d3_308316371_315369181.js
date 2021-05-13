@@ -3,8 +3,8 @@ const carsCSV = 'cars.csv';
 const fuelPrices = 'Fuel_Prices.csv';
 
 const svgSize = {
-    width : 700,
-    height : 400,
+    width : 1200,
+    height : 450,
     margin: {
         left : 50,
         right : 50,
@@ -20,15 +20,15 @@ const axisTicks = {
     outerSize: 0
 }
 
-buildBarChart();
-buildScatterPlot();
-buildLineChart();
+// buildBarChart();
+// buildScatterPlot();
+// buildLineChart();
 
 async function buildBarChart() {
 
     let dataset = d3.csvParse(await getData(task2CSV), function (d) {
         let temp = {
-                Type: d['Type'],
+                Type: d.Type,
                 RetailPrice: d['Retail.Price'],
                 DealerCost: d['Dealer.Cost'],
         };
@@ -47,7 +47,7 @@ async function buildBarChart() {
 		return i;
 	});
 
-	let container = d3.select('#barchart')
+	let container = d3.select('.container')
 
 	let svg = container
 		.append('svg')
@@ -136,6 +136,7 @@ async function buildBarChart() {
 			d3.select(this).style('stroke', 'none').style('fill', 'red');
 		});
 
+	// chart title
 	svg
 		.append('text')
 		.attr('x', svgSize.width / 3)
@@ -143,6 +144,7 @@ async function buildBarChart() {
 		.attr('text-anchor', 'right')
 		.style('font-size', '16px')
 		.text('Sales and costs per each vehicle category')
+		.attr("font-weight", 700)
         .attr("class", "chartTitle");
 
 	// Add the X Axis
@@ -158,6 +160,7 @@ async function buildBarChart() {
 		.attr('text-anchor', 'middle')
 		.attr('transform', 'translate(' + svgSize.width / 2.2 + ',' + (svgSize.height - 10) + ')')
 		.text('Vehicle category')
+		.attr("font-weight", 700)
         .attr("class", "axisLabel");
 
 	// Add the Y Axis
@@ -175,7 +178,42 @@ async function buildBarChart() {
 		.attr('y', 10)
 		.attr('transform', 'rotate(-90)')
 		.text('USD - $')
+		.attr("font-weight", 700)
         .attr("class", "axisLabel");
+
+	//legend
+	let legend = svg.append('g')
+		.attr('class', 'legend')
+		.attr('transform', 'translate(' + (svgSize.margin.left + 12) + ', 0)');
+
+	legend.selectAll('rect')
+		.data(['red', 'blue'])
+		.enter()
+		.append('rect')
+		.attr('x', 0)
+		.attr('y', function(d, i){
+			return i * 18;
+		})
+		.attr('width', 12)
+		.attr('height', 12)
+		.attr('fill', function(d){
+			return d;
+		});
+
+	legend.selectAll('text')
+		.data(['RetailPrice', 'DealerCost'])
+		.enter()
+		.append('text')
+		.text(function(d){
+			return d;
+		})
+		.attr('x', 18)
+		.attr('y', function(d, i){
+			return i * 18;
+		})
+		.attr("class", "legendText")
+		.attr('text-anchor', 'start')
+		.attr('alignment-baseline', 'hanging');
 }
 
 async function buildScatterPlot() {
@@ -218,7 +256,7 @@ async function buildScatterPlot() {
 		.domain([0, d3.max(dataset, (d) => parseInt(d.cylinder))])
 		.range([1.5, 5]);
 
-	let container = d3.select('#scatterplot').attr('width', svgSize.width).attr('height', svgSize.height);
+	let container = d3.select('.container').attr('width', svgSize.width).attr('height', svgSize.height);
 
 	let svg = container.append('svg').attr('width', svgSize.width).attr('height', svgSize.height);
 
@@ -273,6 +311,7 @@ async function buildScatterPlot() {
 		.attr('text-anchor', 'middle')
 		.attr('transform', 'translate(' + svgSize.width / 2.2 + ',' + (svgSize.height - 16) + ')')
 		.text('Horse power')
+		.attr("font-weight", 700)
         .attr("class", "axisLabel");
 
 	// Add the Y Axis
@@ -291,6 +330,7 @@ async function buildScatterPlot() {
 		.attr('y', 16)
 		.attr('transform', 'rotate(-90)')
 		.text('Highway Miles per Gallon')
+		.attr("font-weight", 700)
         .attr("class", "axisLabel");
 
 	// title
@@ -301,7 +341,41 @@ async function buildScatterPlot() {
 		.attr('text-anchor', 'right')
 		.style('font-size', '16px')
 		.text('Horse power to miles per gallon fuel consumption ratio')
+		.attr("font-weight", 700)
         .attr("class", "chartTitle");
+
+	//legend
+	let legend = svg.append('g')
+		.attr('class', 'legend')
+		.attr('transform', 'translate(' + (svgSize.margin.left + 12) + ',' + (svgSize.margin.top + 35) + ')');
+
+	legend.selectAll('rect')
+		.data(['red', 'black', 'grey'])
+		.enter()
+		.append('circle')
+		.attr('cx', 0)
+		.attr('cy', function(d, i){
+			return i * 18;
+		})
+		.attr('r', 5)
+		.attr('fill', function(d){
+			return d;
+		});
+
+	legend.selectAll('text')
+		.data(['Sports car', 'SUV', 'other'])
+		.enter()
+		.append('text')
+		.text(function(d){
+			return d;
+		})
+		.attr('x', 18)
+		.attr('y', function(d, i){
+			return i * 18 - 5;
+		})
+		.attr("class", "legendText")
+		.attr('text-anchor', 'start')
+		.attr('alignment-baseline', 'hanging');
 }
 
 async function buildLineChart() {
@@ -340,7 +414,7 @@ async function buildLineChart() {
     });
 
 	let container = d3
-		.select('#linechart')
+		.select('.container')
 		.attr('width', svgSize.width)
 		.attr('height', svgSize.height);
 
@@ -408,7 +482,8 @@ async function buildLineChart() {
 		.attr('text-anchor', 'middle')
 		.attr('transform', 'translate(' + (svgSize.width - svgSize.margin.left) / 1.7 + ',' + (svgSize.height - svgSize.margin.bottom + svgSize.margin.top) + ')')
 		.text('Years')
-        .attr("class", "axisLabel");
+		.attr("font-weight", 700)
+		.attr("class", "axisLabel");
 
 	// Add the Y Axis
 	svg
@@ -425,16 +500,18 @@ async function buildLineChart() {
 		.attr('y', 16)
 		.attr('transform', 'rotate(-90)')
 		.text('USD - $')
+		.attr("font-weight", 700)
         .attr("class", "axisLabel");
 
 	// title
 	svg
 		.append('text')
-		.attr('x', (svgSize.width - svgSize.margin.left) * 0.8)
+		.attr('x', (svgSize.width - svgSize.margin.left) * 0.5)
 		.attr('y', svgSize.margin.top)
 		.attr('text-anchor', 'right')
 		.style('font-size', '16px')
 		.text("Fuel prices from '04-20")
+		.attr("font-weight", 700)
         .attr("class", "chartTitle");
 
 	svg
@@ -452,6 +529,42 @@ async function buildLineChart() {
 		.style('stroke', 'red')
 		.attr('d', valueline2)
 		.attr('transform', 'translate(' + svgSize.margin.left + ',0)');
+
+	//legend
+	let legend = svg.append('g')
+		.attr('class', 'legend')
+		.attr('transform', 'translate(' + (svgSize.margin.left + 12) + ', 0)');
+
+	legend.selectAll('line')
+		.data(['red', 'blue'])
+		.enter()
+		.append('line')
+		.attr('x1', 18)
+		.attr('y1', function(d, i){
+			return i * 18 + 5;
+		})
+		.attr('x2', 30)
+		.attr('y2', function (d, i) {
+			return i * 18 + 5;
+		})
+		.attr('style', function(d){
+			return "stroke-width:3; stroke:" + d + ";";
+		});
+
+	legend.selectAll('text')
+		.data(['Petrol', 'Diesel'])
+		.enter()
+		.append('text')
+		.text(function(d){
+			return d;
+		})
+		.attr('x', 36)
+		.attr('y', function(d, i){
+			return i * 18;
+		})
+		.attr("class", "legendText")
+		.attr('text-anchor', 'start')
+		.attr('alignment-baseline', 'hanging');
 }
 
 async function getData(url) {
@@ -478,6 +591,30 @@ function getColor(type) {
 			return 'black';
 		default:
 			return 'grey';
+	}
+}
+
+async function buttonClick(btn){
+
+	resetButtonColors();
+	let property = document.getElementById(btn);
+	property.style.backgroundColor = 'rgba(' + [139, 208, 133].join(',') + ')';
+	d3.selectAll("svg").remove();
+	if(btn=="toBar") {
+		await buildBarChart();
+	}
+	else if(btn=="toScatter") {
+		await buildScatterPlot();
+	}
+	else if(btn=="toLine") {
+		await buildLineChart();
+	}
+}
+
+function resetButtonColors() {
+	let elements = document.getElementsByClassName('button'); // get all elements
+	for(let i = 0; i < elements.length; i++){
+		elements[i].style.backgroundColor =  'rgba(' + [255, 255, 255, 0.6].join(',') + ')';
 	}
 }
 
