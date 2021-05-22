@@ -210,7 +210,7 @@ async function buildBarChart() {
 
 	legend
 		.selectAll('rect')
-		.data(['red', 'blue'])
+		.data(['blue', 'red'])
 		.enter()
 		.append('rect')
 		.attr('x', 0)
@@ -421,21 +421,6 @@ async function buildScatterPlot() {
 		})
 		.attr("stroke", "black")
 		.attr('stroke-width', 1);
-
-
-	// legend
-	// 	.selectAll('circle')
-	// 	.data([3, 5, 7])
-	// 	.enter()
-	// 	.append('circle')
-	// 	.attr('cx', 0)
-	// 	.attr('cy', 72)
-	// 	.attr('r', function (d) {
-	// 		return d;
-	// 	})
-	// 	.attr('stroke', "black")
-	// 	.attr("fill", "white")
-	// 	.attr('stroke-width', 1);
 
 	legend
 		.selectAll('text')
